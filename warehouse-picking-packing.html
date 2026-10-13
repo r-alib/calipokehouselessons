@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warehouse Picking & Packing · Calipokehouse Training</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap">
+<style>
+/* Layout: lesson tabs on top, a 16:9 cartoon stage in the middle, subtitle + transport controls below */
+:root{
+  --bg:#f3eee4; --panel:#ffffff; --fg:#2b2a3a; --muted:#6c6a7a; --line:#e2dccd;
+  --accent:#2a9d8f; --accent2:#e76f51; --soft:#e8f3f1;
+  --display:"Fredoka","Nunito","Segoe UI",sans-serif; --body:"Nunito","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#1b1a22;--panel:#26252f;--fg:#f0ede6;--muted:#a9a6b5;--line:#3a3845;--soft:#1f3734;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1b1a22;--panel:#26252f;--fg:#f0ede6;--muted:#a9a6b5;--line:#3a3845;--soft:#1f3734;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;padding-block:20px 40px;padding-inline:16px}
+[hidden]{display:none!important}
+.who{font-size:14px;color:var(--muted)}.who b{color:var(--fg)}
+.who a{color:var(--accent);font-weight:700;text-decoration:none}
+.saved{font-size:13px;color:var(--muted);margin-top:4px}
+.wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(22px,3.4vw,30px);margin:0;letter-spacing:.2px}
+header p{margin:0;color:var(--muted);font-size:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:7px 12px;font:600 13px var(--body);cursor:pointer;display:flex;gap:7px;align-items:center}
+.tab b{font-family:var(--display);font-weight:600;color:var(--muted)}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab.on b{color:#dff5f1}
+.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
+.stagebox{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.stage{width:100%;aspect-ratio:16/9;max-width:100%;display:block;background:#f7f1e6}
+.sub{min-height:72px;padding:12px 18px 4px;display:flex;flex-direction:column;gap:4px}
+.sub .t{font-family:var(--display);font-weight:600;font-size:17px}
+.sub .s{font-size:15px;line-height:1.45;color:var(--fg)}
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px 14px}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:12px;padding:9px 14px;font:700 14px var(--body);cursor:pointer;min-width:44px}
+.btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff;min-width:96px}
+.btn[aria-pressed="true"]{background:var(--soft);border-color:var(--accent)}
+.dots{display:flex;gap:6px;margin-inline:auto;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line);border:0;padding:0;cursor:pointer}
+.dot.on{background:var(--accent);transform:scale(1.25)}
+.dot.done{background:var(--accent);opacity:.45}
+.meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--muted);line-height:1.5}
+.note b{color:var(--fg)}
+/* ---- stage animations (applied to inner <g>, never to the positioned outer <g>) ---- */
+.stage g,.stage rect,.stage circle,.stage path,.stage text{transform-box:fill-box;transform-origin:center}
+.pop{animation:pop .55s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--d,0s)}
+@keyframes pop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}
+.fade{animation:fade .6s ease both;animation-delay:var(--d,0s)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.bob{animation:bob 1.8s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.legs{animation:legs .5s ease-in-out infinite alternate;transform-origin:50% 0}
+@keyframes legs{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+.mv{animation:mv var(--t,2.2s) ease-in-out both;animation-delay:var(--d,0s)}
+@keyframes mv{from{transform:translate(var(--fx,0px),var(--fy,0px))}to{transform:translate(var(--tx,0px),var(--ty,0px))}}
+.shake{animation:shake .5s ease-in-out 3;animation-delay:var(--d,0s)}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+.pulse{animation:pulse 1.4s ease-in-out infinite;animation-delay:var(--d,0s)}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.blink{animation:blink 1.1s steps(2,end) infinite;animation-delay:var(--d,0s)}
+@keyframes blink{to{opacity:0}}
+.spin{animation:spin 2.4s linear infinite;transform-origin:center}
+@keyframes spin{to{transform:rotate(360deg)}}
+.grow{animation:grow var(--t,2s) ease-in-out both;animation-delay:var(--d,0s);transform-origin:left center}
+@keyframes grow{from{transform:scaleX(var(--f,0))}to{transform:scaleX(var(--to,1))}}
+.wipe{animation:wipe 1.6s ease-in-out infinite;animation-delay:var(--d,0s)}
+@keyframes wipe{0%,100%{transform:translateX(-10px)}50%{transform:translateX(10px)}}
+.slackbubble{filter:drop-shadow(0 2px 2px rgba(0,0,0,.12))}
+/* ---- quiz ---- */
+.quiz{padding:22px 20px 24px;display:flex;flex-direction:column;gap:16px}
+.quiz h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0}
+.quiz .q{font-size:17px;font-weight:700;line-height:1.4}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;border:1.5px solid var(--line);background:var(--panel);color:var(--fg);border-radius:12px;padding:11px 14px;font:600 15px var(--body);cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.opt b{font-family:var(--display);color:var(--muted);min-width:18px}
+.opt:hover{border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:#3ba55c;background:rgba(59,165,92,.12)}
+.opt.wrong{border-color:#d64545;background:rgba(214,69,69,.12)}
+.fb{border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.5;border:1.5px solid}
+.fb.ok{border-color:#3ba55c;background:rgba(59,165,92,.1)}
+.fb.no{border-color:#d64545;background:rgba(214,69,69,.1)}
+.fb b{display:block;margin-bottom:4px}
+.qbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.score{font-family:var(--display);font-size:40px;font-weight:700;margin:0}
+.score.pass{color:#3ba55c}.score.fail{color:#d64545}
+.qprog{display:flex;gap:5px}
+.qprog span{width:22px;height:8px;border-radius:4px;background:var(--line)}
+.qprog span.ok{background:#3ba55c}.qprog span.no{background:#d64545}.qprog span.cur{background:var(--accent)}
+@media (prefers-reduced-motion: reduce){.pop,.fade,.bob,.legs,.mv,.shake,.pulse,.blink,.spin,.grow,.wipe{animation-duration:.01s!important;animation-iteration-count:1!important}}
+@media (max-width:520px){.sub .t{font-size:15px}.sub .s{font-size:14px}.btn{padding:8px 10px}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Warehouse Picking &amp; Packing</h1>
+      <p>Calipokehouse Training · one short cartoon per step, then a quick test</p>
+    </div>
+    <p class="who" id="who"></p>
+  </header>
+  <section class="stagebox" id="askname" hidden style="padding:18px 20px">
+    <form class="bar" id="nameForm" style="padding:0">
+      <label for="nameIn" style="font-weight:700">Your name:</label>
+      <input type="text" id="nameIn" maxlength="40" required style="flex:1;min-width:180px;font:600 15px var(--body);padding:9px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg)">
+      <button class="btn primary" type="submit">Start</button>
+    </form>
+  </section>
+  <nav class="tabs" id="tabs" aria-label="Lessons"></nav>
+  <section class="stagebox" id="quizbox" hidden><div class="quiz" id="quiz"></div></section>
+  <section class="stagebox" id="playerbox">
+    <svg class="stage" id="stage" viewBox="0 0 800 450" role="img" aria-label="Lesson animation"></svg>
+    <div class="sub"><div class="t" id="cap"></div><div class="s" id="say"></div></div>
+    <div class="bar">
+      <button class="btn" id="prev" title="Previous scene (←)">◀</button>
+      <button class="btn primary" id="play">Play</button>
+      <button class="btn" id="next" title="Next scene (→)">▶</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Scenes"></div>
+      <button class="btn" id="voice" aria-pressed="true" title="Voice-over on/off">Voice on</button>
+      <span class="meta" id="meta"></span>
+    </div>
+  </section>
+  <p class="note"><b>How to use:</b> pick a lesson, press Play, and the scenes advance on their own as the narration finishes. Use ◀ ▶ or the arrow keys to step through, Space to pause. Narration uses the browser's built-in voice; turn it off to read the subtitles at your own pace. Each lesson matches a step in the Warehouse Picking &amp; Packing Guide. After lesson 7 comes the final test: 10 questions, 8 correct to pass, with an explanation after every answer.</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script>
+const COURSE_ID='warehouse-picking-packing';
+/* ============ drawing helpers (all return SVG strings) ============ */
+const C={ink:'#2b2a3a',picker:'#2a9d8f',pickerD:'#1f7a70',packer:'#e76f51',packerD:'#b9503a',lead:'#6c5ce7',
+  wood:'#c89b6d',woodD:'#9b7247',kraft:'#dcb77f',kraftD:'#b98a55',tape:'#f2c14e',floor:'#e7dfcf',wall:'#f7f1e6',
+  screen:'#1f2a44',screenT:'#9fe3d8',green:'#3ba55c',red:'#d64545',slack:'#4a154b',white:'#ffffff',grey:'#b8b2a4',skin:'#f6cfa0',text:'#2b2a3a'};
+const F=`font-family:Nunito,Segoe UI,system-ui,sans-serif`;
+const FD=`font-family:Fredoka,Nunito,sans-serif`;
+const g=(x,y,inner,cls='',style='')=>`<g transform="translate(${x},${y})"><g class="${cls}" style="${style}">${inner}</g></g>`;
+const txt=(x,y,s,o={})=>`<text x="${x}" y="${y}" font-size="${o.s||14}" font-weight="${o.w||600}" fill="${o.c||C.text}" text-anchor="${o.a||'middle'}" style="${o.d?FD:F}">${s}</text>`;
+
+function bg(o={}){
+  return `<rect width="800" height="450" fill="${C.wall}"/>
+  <rect y="330" width="800" height="120" fill="${C.floor}"/>
+  <line x1="0" y1="330" x2="800" y2="330" stroke="#d6cdb9" stroke-width="2"/>
+  ${o.zone?`<rect x="${o.zone[0]}" y="332" width="${o.zone[1]}" height="110" fill="${o.zoneC||'#dfe9f3'}" opacity=".8"/>${txt(o.zone[0]+o.zone[1]/2,430,o.zone[2],{s:13,c:'#5b6b84'})}`:''}`;
+}
+function person(x,y,o={}){ // feet at (x,y), faces right by default
+  const c=o.color||C.picker, cd=o.dark||C.pickerD, mood=o.mood||'smile';
+  const mouth=mood==='smile'?`<path d="M-6 -60 Q0 -54 6 -60" stroke="${C.ink}" stroke-width="2" fill="none"/>`:
+    mood==='worry'?`<path d="M-6 -56 Q0 -61 6 -56" stroke="${C.ink}" stroke-width="2" fill="none"/>`:
+    `<path d="M-5 -58 H5" stroke="${C.ink}" stroke-width="2"/>`;
+  const legs=`<g class="${o.walk?'legs':''}" style="transform-origin:0 -14px"><rect x="-11" y="-16" width="8" height="16" rx="3" fill="${cd}"/><rect x="3" y="-16" width="8" height="16" rx="3" fill="${cd}"/></g>`;
+  const carry=o.pose==='carry';
+  const arms=carry?`<path d="M-13 -40 L-6 -26 M13 -40 L6 -26" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`:
+    o.pose==='point'?`<path d="M-13 -40 L-18 -22 M13 -40 L34 -48" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`:
+    `<path d="M-13 -40 L-19 -20 M13 -40 L19 -20" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`;
+  const item=o.item||'';
+  const name=o.name?txt(0,16,o.name,{s:12,c:cd,w:700}):'';
+  return g(x,y,`${legs}<rect x="-14" y="-52" width="28" height="38" rx="9" fill="${c}"/>
+    ${o.vest?`<rect x="-10" y="-50" width="20" height="26" rx="5" fill="none" stroke="${C.tape}" stroke-width="3"/>`:''}
+    ${arms}<circle cx="0" cy="-68" r="15" fill="${C.skin}"/>
+    <path d="M-15 -70 Q0 -92 15 -70 Z" fill="${cd}"/>
+    <circle cx="-5" cy="-68" r="1.8" fill="${C.ink}"/><circle cx="5" cy="-68" r="1.8" fill="${C.ink}"/>${mouth}
+    ${carry?g(0,-24,item):''}${name}`,o.cls||'bob');
+}
+function smallBox(x,y,w=24,h=18,fill=C.kraft){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${fill}" stroke="${C.kraftD}"/>`;}
+function shelf(x,y,w,h,cols,rows,level,o={}){ // level(cell)->0..3 boxes
+  let s=`<rect x="0" y="0" width="${w}" height="${h}" fill="${C.wood}" stroke="${C.woodD}" stroke-width="2" rx="3"/>`;
+  const rh=h/rows, cw=w/cols;
+  for(let r=0;r<rows;r++){ s+=`<line x1="0" y1="${r*rh}" x2="${w}" y2="${r*rh}" stroke="${C.woodD}" stroke-width="3"/>`;
+    for(let c=0;c<cols;c++){ const n=typeof level==='function'?level(r*cols+c):level; const bw=Math.min(22,cw/3-4);
+      for(let i=0;i<n;i++) s+=smallBox(c*cw+5+i*(bw+3),(r+1)*rh-bw-3,bw,bw,o.fill||C.kraft); } }
+  s+=`<line x1="0" y1="${h}" x2="${w}" y2="${h}" stroke="${C.woodD}" stroke-width="3"/>`;
+  if(o.name) s+=txt(w/2,-8,o.name,{s:13,c:C.woodD,w:700});
+  return g(x,y,s,o.cls||'',o.style||'');
+}
+function label(x,y,o={}){ const s=o.s||1;
+  return g(x,y,`<rect x="-16" y="-11" width="32" height="22" rx="2" fill="#fff" stroke="#999"/>
+   ${[...Array(7)].map((_,i)=>`<rect x="${-12+i*3.4}" y="-8" width="${i%3?1:2}" height="7" fill="${C.ink}"/>`).join('')}
+   <rect x="-12" y="2" width="20" height="2" fill="#777"/><rect x="-12" y="6" width="14" height="2" fill="#aaa"/>`,o.cls||'',`${o.style||''};transform:scale(${s})`);
+}
+function labelStack(x,y,n=4,cls='pop',d=0){ let s=''; for(let i=0;i<n;i++) s+=label(0,-i*4,{});return g(x,y,s,cls,`--d:${d}s`);}
+function tray(x,y,w,name,color,cls='',d=0){return g(x,y,`<path d="M0 0 L${w} 0 L${w-6} 22 L6 22 Z" fill="${color}" opacity=".9"/><rect x="0" y="-2" width="${w}" height="4" fill="${color}"/>${txt(w/2,38,name,{s:12,c:C.muted||'#6c6a7a'})}`,cls,`--d:${d}s`);}
+function box(x,y,w,h,o={}){ // bottom-left at x,y
+  const open=o.open; let s=`<rect x="0" y="${-h}" width="${w}" height="${h}" rx="3" fill="${o.fill||C.kraft}" stroke="${C.kraftD}" stroke-width="2"/>`;
+  if(open) s+=`<path d="M0 ${-h} L-${w*.28} ${-h-14}" stroke="${C.kraftD}" stroke-width="2" fill="${C.kraftD}"/><path d="M${w} ${-h} L${w*1.28} ${-h-14}" stroke="${C.kraftD}" stroke-width="2"/>
+   <path d="M0 ${-h} L${w*.3} ${-h-12} L${w} ${-h-12} L${w} ${-h}" fill="none" stroke="${C.kraftD}" stroke-width="2" opacity=".5"/>`;
+  else s+=`<line x1="${w/2}" y1="${-h}" x2="${w/2}" y2="0" stroke="${C.kraftD}" stroke-width="2" opacity=".5"/>`;
+  if(o.taped) s+=`<rect x="${w/2-5}" y="${-h-2}" width="10" height="${h+4}" fill="${C.tape}" opacity=".95"/>`;
+  if(o.label) s+=label(w*.5+(o.labelX||0),-h*.5+(o.labelY||0),{s:o.labelS||1,cls:o.labelCls||''});
+  if(o.slip) s+=`<rect x="${w*.3}" y="${-h+6}" width="${w*.4}" height="${h*.55}" fill="#fff" stroke="#bbb"/><line x1="${w*.36}" y1="${-h+14}" x2="${w*.64}" y2="${-h+14}" stroke="#999"/><line x1="${w*.36}" y1="${-h+20}" x2="${w*.6}" y2="${-h+20}" stroke="#bbb"/>`;
+  if(o.carrier) s+=txt(w/2,-h/2+5,o.carrier,{s:12,c:C.kraftD,w:800});
+  if(o.text) s+=txt(w/2,22,o.text,{s:12,c:'#6c6a7a'});
+  return g(x,y,s,o.cls||'',`--d:${o.d||0}s;${o.style||''}`);
+}
+function table(x,y,w,cls='',d=0){return g(x,y,`<rect x="0" y="0" width="${w}" height="10" rx="3" fill="${C.wood}" stroke="${C.woodD}"/><rect x="10" y="10" width="8" height="60" fill="${C.woodD}"/><rect x="${w-18}" y="10" width="8" height="60" fill="${C.woodD}"/>`,cls,`--d:${d}s`);}
+function screen(x,y,w,h,lines,o={}){
+  const L=lines.map((l,i)=>`<text x="12" y="${26+i*18}" font-size="12" fill="${l.startsWith('✓')?C.green:l.startsWith('✗')?'#ff8a8a':C.screenT}" font-weight="600" style="${F}">${l}</text>`).join('');
+  return g(x,y,`<rect x="0" y="0" width="${w}" height="${h}" rx="6" fill="${C.screen}"/><rect x="${w/2-12}" y="${h}" width="24" height="10" fill="#333"/><rect x="${w/2-30}" y="${h+10}" width="60" height="5" rx="2" fill="#333"/>
+   <text x="12" y="16" font-size="10" fill="#8aa0c8" font-weight="700" style="${F}" letter-spacing=".5">${o.title||'CALIPOKE STATION'}</text>${L}`,o.cls||'',`--d:${o.d||0}s`);
+}
+function bubble(x,y,w,h,lines,o={}){ const col=o.color||'#fff', tc=o.tc||C.text;
+  const tail=o.tail==='bl'?`<path d="M18 ${h} L10 ${h+14} L34 ${h} Z" fill="${col}" stroke="${o.stroke||'#cfc7b6'}"/>`:o.tail==='br'?`<path d="M${w-34} ${h} L${w-10} ${h+14} L${w-18} ${h} Z" fill="${col}"/>`:'';
+  return g(x,y,`${tail}<rect x="0" y="0" width="${w}" height="${h}" rx="10" fill="${col}" stroke="${o.stroke||'#cfc7b6'}"/>
+   ${lines.map((l,i)=>`<text x="${w/2}" y="${(h/2)-(lines.length-1)*8+i*16+5}" text-anchor="middle" font-size="${o.s||13}" font-weight="700" fill="${tc}" style="${F}">${l}</text>`).join('')}`,o.cls||'pop',`--d:${o.d||0}s`);
+}
+function slack(x,y,lines,o={}){return bubble(x,y,o.w||170,o.h||54,['Slack: '+lines[0],...lines.slice(1)],{color:C.slack,tc:'#fff',stroke:C.slack,tail:'bl',cls:'pop slackbubble',d:o.d||0,s:12});}
+function check(x,y,s=1,d=0){return g(x,y,`<circle r="16" fill="${C.green}"/><path d="M-7 0 L-2 6 L8 -6" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>`,'pop',`--d:${d}s;transform:scale(${s})`);}
+function cross(x,y,s=1,d=0){return g(x,y,`<circle r="16" fill="${C.red}"/><path d="M-6 -6 L6 6 M6 -6 L-6 6" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`,'pop',`--d:${d}s;transform:scale(${s})`);}
+function tag(x,y,s,o={}){const w=s.length*7.2+22;return g(x,y,`<rect x="${-w/2}" y="-13" width="${w}" height="26" rx="13" fill="${o.fill||C.picker}"/>${txt(0,5,s,{s:13,c:'#fff',w:800})}`,o.cls||'pop',`--d:${o.d||0}s`);}
+function arrow(x1,y1,x2,y2,o={}){return `<g class="${o.cls||'fade'}" style="--d:${o.d||0}s"><path d="M${x1} ${y1} L${x2} ${y2}" stroke="${o.c||C.ink}" stroke-width="3" stroke-dasharray="${o.dash||'0'}" fill="none" marker-end="url(#ah)"/></g>`;}
+function truck(x,y,o={}){return g(x,y,`<rect x="0" y="-60" width="120" height="60" rx="6" fill="${o.c||'#4a6fa5'}"/><rect x="120" y="-40" width="50" height="40" rx="6" fill="${o.c||'#4a6fa5'}"/><rect x="128" y="-34" width="28" height="18" rx="3" fill="#cfe3ff"/>
+  <circle cx="30" cy="0" r="12" fill="#333"/><circle cx="30" cy="0" r="5" fill="#999"/><circle cx="140" cy="0" r="12" fill="#333"/><circle cx="140" cy="0" r="5" fill="#999"/>${txt(60,-26,o.name||'PICKUP',{s:14,c:'#fff',w:800,d:1})}`,o.cls||'',`--d:${o.d||0}s;${o.style||''}`);}
+function clock(x,y,h,m,o={}){const ha=(h%12+m/60)*30, ma=m*6;return g(x,y,`<circle r="30" fill="#fff" stroke="${C.ink}" stroke-width="3"/>${[0,90,180,270].map(a=>`<line x1="0" y1="-25" x2="0" y2="-21" stroke="${C.ink}" stroke-width="2" transform="rotate(${a})"/>`).join('')}
+ <line x1="0" y1="0" x2="0" y2="-15" stroke="${C.ink}" stroke-width="4" stroke-linecap="round" transform="rotate(${ha})"/><line x1="0" y1="0" x2="0" y2="-22" stroke="${C.packer}" stroke-width="3" stroke-linecap="round" transform="rotate(${ma})"/><circle r="3" fill="${C.ink}"/>`,o.cls||'pop',`--d:${o.d||0}s`);}
+function gauge(x,y,w,pct,o={}){ // horizontal fill gauge with 30/70 marks
+  return g(x,y,`<rect x="0" y="0" width="${w}" height="26" rx="13" fill="#e4ddcc" stroke="#cbbf9f"/>
+   <g class="grow" style="--f:${(o.from??pct)/100};--to:${pct/100};--t:${o.t||2}s;--d:${o.d||0}s;transform-origin:0 50%"><rect x="2" y="2" width="${w-4}" height="22" rx="11" fill="${o.c||C.picker}"/></g>
+   <line x1="${w*.3}" y1="-6" x2="${w*.3}" y2="32" stroke="${C.ink}" stroke-width="2" stroke-dasharray="3 3"/><line x1="${w*.7}" y1="-6" x2="${w*.7}" y2="32" stroke="${C.ink}" stroke-width="2" stroke-dasharray="3 3"/>
+   ${txt(w*.3,46,'30%',{s:12})}${txt(w*.7,46,'70%',{s:12})}${txt(w/2,-14,'Scanned-orders shelf',{s:13,w:700})}`,'fade',`--d:${o.fd||0}s`);}
+function bubbleRoll(x,y,cls='pop',d=0){return g(x,y,`<rect x="0" y="-60" width="34" height="60" rx="8" fill="#cfe6ee" stroke="#8fb9c7"/>${[...Array(12)].map((_,i)=>`<circle cx="${8+(i%2)*18}" cy="${-52+Math.floor(i/2)*10}" r="4" fill="#fff" stroke="#8fb9c7"/>`).join('')}`,cls,`--d:${d}s`);}
+function bubbleSq(x,y,cls='pop',d=0){return g(x,y,`<rect x="-14" y="-14" width="28" height="28" rx="3" fill="#cfe6ee" stroke="#8fb9c7"/>${[-7,0,7].map(a=>[-7,0,7].map(b=>`<circle cx="${a}" cy="${b}" r="2.5" fill="#fff" stroke="#8fb9c7"/>`).join('')).join('')}`,cls,`--d:${d}s`);}
+function tapeRoll(x,y,cls='pop',d=0){return g(x,y,`<circle r="16" fill="${C.tape}"/><circle r="7" fill="${C.wall}"/>`,cls,`--d:${d}s`);}
+function wait(x,y,d=0){return g(x,y,`<circle r="9" fill="${C.ink}" opacity=".15"/>`,'pulse',`--d:${d}s`);}
+const DEFS=`<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="${C.ink}"/></marker></defs>`;
+
+/* ============ lessons ============ */
+const PK={color:C.picker,dark:C.pickerD,name:'Picker'}, PA={color:C.packer,dark:C.packerD,name:'Packer'}, LD={color:C.lead,dark:'#4834d4',name:'Team lead'};
+const centerShelf=(x,y,lvl,o={})=>shelf(x,y,220,130,3,2,lvl,{name:'Center shelves',...o});
+const storageShelf=(x,y,o={})=>shelf(x,y,150,130,2,2,3,{name:'Storage',fill:'#cdbf9c',...o});
+
+const LESSONS=[
+{id:1,title:'Shift preparation',scenes:[
+ {cap:'Every shift starts before the first order',say:'Welcome to Calipokehouse. There are two roles in the warehouse: the picker, in green, and the packer, in orange. Every shift starts with preparation, so that picking and packing can run without stops.',
+  draw:()=>bg()+centerShelf(290,200,2)+person(170,330,{...PK,cls:'pop bob'})+person(620,330,{...PA,cls:'pop bob',mood:'smile'})+tag(170,370,'Picker',{d:.6})+tag(620,370,'Packer',{fill:C.packer,d:.8})},
+ {cap:'Picker: check the center shelves',say:'The picker walks the center shelves first. Anything low or out gets restocked from storage. This is called stocking up.',
+  draw:()=>bg()+centerShelf(250,200,i=>i===4?0:2)+storageShelf(600,200)+g(0,0,person(0,0,{...PK,walk:true,cls:''}),'mv','--fx:120px;--fy:330px;--tx:430px;--ty:330px;--t:2.4s')+cross(372,300,.8,2.2)+tag(372,255,'Low',{fill:C.red,d:2.4})},
+ {cap:'Stock up, then record the transfer',say:'The picker moves the item from storage to its spot on the center shelf, and records the transfer in the system right away. If the transfer is not recorded, the system still shows the item in its old location, and the next picker cannot find it.',
+  draw:()=>bg()+centerShelf(250,200,i=>i===4?2:2,{})+storageShelf(600,200)+g(0,0,person(0,0,{...PK,walk:true,pose:'carry',item:smallBox(-12,-8,24,18)}),'mv','--fx:560px;--fy:330px;--tx:360px;--ty:330px;--t:2.4s')+screen(40,150,170,100,['Transfer','Storage → Center A2','✓ Recorded'],{d:2.6})+check(230,300,1,3)},
+ {cap:'Check Slack, pick up the labels',say:'Next, the picker checks Slack: are today\'s labels ready? Then picks up the printed labels from the Backend Team office, and counts them against the number of orders in Slack.',
+  draw:()=>bg()+g(560,140,`<rect x="0" y="0" width="200" height="190" fill="#efe6d6" stroke="#d6cdb9" stroke-width="3"/><rect x="0" y="0" width="200" height="22" fill="#d6cdb9"/>${txt(100,16,'Backend Team',{s:12,c:'#5b5b5b',w:800})}`,'fade')+table(590,250,140)+labelStack(660,245,6,'pop',1.8)+slack(80,90,['Labels ready ✓','42 orders today'],{d:.4})+g(0,0,person(0,0,{...PK,walk:true}),'mv','--fx:180px;--fy:330px;--tx:520px;--ty:330px;--t:2.4s;--d:1s')+txt(660,300,'Count: 42',{s:13,c:C.pickerD,w:800})},
+ {cap:'Sort the labels before picking',say:'Sort the labels into groups before picking: by number of items per order, by product type, and by carrier, C B T or U S P S. Single-item orders are fastest, so start there. Keep each group separate so they do not get mixed up.',
+  draw:()=>bg()+table(150,250,500)+tray(180,236,120,'By item count',C.picker,'pop',.3)+tray(340,236,120,'By product type',C.picker,'pop',.8)+tray(500,236,120,'By carrier',C.picker,'pop',1.3)+labelStack(240,228,3,'pop',.6)+labelStack(400,228,3,'pop',1.1)+labelStack(560,228,3,'pop',1.6)+tag(530,290,'CBT',{fill:'#4a6fa5',d:1.9})+tag(600,290,'USPS',{fill:'#2b5fa3',d:2.1})+person(90,330,PK)},
+ {cap:'Packer: set up supplies',say:'Meanwhile the packer sets up the packing table: boxes in several sizes, tape, bubble wrap, kraft paper, a knife and a marker. Check there is enough tape and wrap for the whole day, and clear the table of anything that does not belong.',
+  draw:()=>bg()+table(180,250,440)+box(200,250,50,38,{d:.3,cls:'pop'})+box(260,250,70,52,{d:.6,cls:'pop'})+box(340,250,90,64,{d:.9,cls:'pop'})+tapeRoll(470,232,'pop',1.2)+bubbleRoll(500,250,'pop',1.5)+g(560,250,`<rect x="0" y="-40" width="40" height="40" fill="#c9a877" rx="2"/>${txt(20,-16,'kraft',{s:10,c:'#5b4a2e'})}`,'pop','--d:1.8s')+person(110,330,PA)+check(660,200,1,2.2)},
+ {cap:'Orders not ready yet? Pre-build boxes',say:'If orders are not ready yet, do not wait. Open the item list in Slack, estimate which box sizes will be needed most, and build a stock of each size. Tear bubble wrap into squares and stack them by the table. This is the biggest time saver of the shift.',
+  draw:()=>bg()+table(150,250,500)+slack(60,70,['Today\'s orders','mostly small + medium'],{d:.2})+bubbleRoll(560,250,'pop',.4)+bubbleSq(500,228,'pop',1.2)+bubbleSq(470,228,'pop',1.6)+bubbleSq(440,228,'pop',2)+box(190,250,50,38,{open:true,d:.8,cls:'pop'})+box(250,250,50,38,{open:true,d:1.3,cls:'pop'})+box(310,250,70,52,{open:true,d:1.8,cls:'pop'})+person(100,330,{...PA,pose:'carry',item:smallBox(-14,-10,28,20)})},
+]},
+{id:2,title:'Picking orders',scenes:[
+ {cap:'One group of labels at a time',say:'Picking means collecting exactly the items on the order. Take one group of labels, not all of them. The fewer orders in your hands, the smaller the chance of mixing items between them.',
+  draw:()=>bg()+table(60,250,200)+labelStack(110,236,3,'pop',.2)+labelStack(160,236,3,'pop',.4)+labelStack(210,236,3,'pop',.6)+person(330,330,{...PK,pose:'carry',item:labelStack(0,6,2,'',0)})+bubble(360,120,230,60,['Read the label:','item, variant, quantity ×3'],{d:1,tail:'bl'})+centerShelf(520,200,2)},
+ {cap:'Pick from the center shelves only',say:'Items are picked from the center shelves only. Storage stock is never taken directly. If the shelf is empty, the item goes through a transfer first.',
+  draw:()=>bg()+centerShelf(120,200,2)+storageShelf(560,200)+check(230,160,1,.8)+cross(635,160,1,1.2)+g(0,0,person(0,0,{...PK,walk:true}),'mv','--fx:420px;--fy:330px;--tx:300px;--ty:330px;--t:2s')+tag(635,300,'Not from here',{fill:C.red,d:1.5})},
+ {cap:'Item missing? Check, transfer, record',say:'If an item is missing or short, check its stock and location in the system. If it is in storage, move the quantity you need to the center shelf and record the transfer. If there is none anywhere, set the label aside in the problem-orders pile and tell the team lead.',
+  draw:()=>bg()+centerShelf(80,200,i=>i===1?0:2)+screen(330,120,180,110,['Item: ETB Prismatic','Center A1: 0','Storage B3: 12','→ Transfer 4'],{d:.5})+storageShelf(580,200)+arrow(575,270,320,270,{d:1.8,dash:'6 6'})+person(440,330,{...PK,mood:'think'})+check(420,250,.9,2.4)},
+ {cap:'Keep orders separate',say:'One order, one tray, with its label on top. Items from two different orders never lie together. That is how mix-ups happen.',
+  draw:()=>bg()+table(130,250,540)+tray(160,236,130,'Order 1',C.picker,'pop',.2)+tray(330,236,130,'Order 2',C.picker,'pop',.6)+tray(500,236,130,'Order 3',C.picker,'pop',1)+smallBox(185,214,26,20)+smallBox(216,214,26,20)+label(240,224,{cls:'pop',style:'--d:1.4s'})+smallBox(360,214,26,20)+label(410,224,{cls:'pop',style:'--d:1.6s'})+smallBox(525,214,26,20)+smallBox(556,214,26,20)+smallBox(587,214,26,20)+label(610,224,{cls:'pop',style:'--d:1.8s'})+check(640,180,.9,2.2)},
+ {cap:'Check, then into the scanning area',say:'Before handing the order over, check it once more against the label: every item, the right variant, the right quantity. Then place it with its label in the scanning area, in picking order, label facing up.',
+  draw:()=>bg({zone:[520,260,'Scanning area'],zoneC:'#e4ecd9'})+g(0,0,person(0,0,{...PK,walk:true,pose:'carry',item:smallBox(-14,-10,28,20)}),'mv','--fx:200px;--fy:330px;--tx:520px;--ty:330px;--t:2.4s')+table(560,250,200)+box(590,250,56,40,{label:true,labelY:-30,labelS:.8,d:2.5,cls:'pop'})+box(660,250,56,40,{label:true,labelY:-30,labelS:.8,d:2.8,cls:'pop'})+bubble(120,120,200,60,['Items ✓  Variant ✓','Quantity ✓'],{d:.6,tail:'br'})},
+]},
+{id:3,title:'Scanning in Calipoke Station',scenes:[
+ {cap:'Scan the label first',say:'Scanning is the checkpoint between picking and packing. Scan the label first. Calipoke Station opens the order and shows the items it should contain.',
+  draw:()=>bg()+table(200,250,420)+screen(420,110,190,120,['Order #1042','Charizard ex ×1','Booster bundle ×3','Sleeves ×1'],{d:1.2})+g(0,0,label(0,0,{}),'mv','--fx:300px;--fy:160px;--tx:380px;--ty:200px;--t:1.2s')+g(380,200,`<circle r="18" fill="${C.red}" opacity=".35"/>`,'pulse','--d:1.2s')+person(290,330,{...PK,pose:'point'})},
+ {cap:'Scan every item, one at a time',say:'Now scan each item, one by one. If the order has three of the same item, scan all three, not one item three times. That is how the system confirms you really hold three units.',
+  draw:()=>bg()+table(200,250,420)+screen(420,110,190,120,['Order #1042','✓ Charizard ex ×1','✓ Booster bundle 3/3','Sleeves ×1'],{d:2.4})+[0,1,2].map(i=>g(0,0,smallBox(-12,-9,24,18),'mv',`--fx:${250+i*34}px;--fy:230px;--tx:380px;--ty:200px;--t:.9s;--d:${i*.8}s`)).join('')+g(380,200,`<circle r="18" fill="${C.red}" opacity=".35"/>`,'pulse')+person(300,330,PK)+txt(300,120,'1 · 2 · 3',{s:22,d:1,c:C.pickerD})},
+ {cap:'Compare the screen with your hands',say:'Before confirming, compare the screen with what is in front of you. Every line scanned? No extra items the system did not expect? Quantities match? Only then confirm.',
+  draw:()=>bg()+screen(300,100,220,130,['Order #1042','✓ Charizard ex 1/1','✓ Booster bundle 3/3','✓ Sleeves 1/1','All items scanned'],{d:.2})+bubble(40,120,210,80,['Every line ✓','No extra items ✓','Quantity ✓'],{d:.8,tail:'br'})+person(640,330,{...PK,mood:'think'})+check(560,120,1,2)},
+ {cap:'Confirm: stock is deducted',say:'Confirming deducts the items from stock. Undoing that is harder than fixing a mistake before you press the button. So the check comes first, and the confirmation second.',
+  draw:()=>bg()+screen(300,100,220,130,['Order #1042','CONFIRMED','Stock updated −5','✓ Ready to pack'],{d:.6})+g(410,260,`<rect x="-60" y="-18" width="120" height="36" rx="18" fill="${C.green}"/>${txt(0,5,'Confirm',{s:15,c:'#fff',w:800})}`,'pop','--d:.1s')+person(620,330,{...PK,pose:'point'})+tag(170,200,'Stock −5',{fill:C.pickerD,d:1.2})},
+ {cap:'Onto the scanned-orders shelf — or stop',say:'Put the confirmed order with its label on the scanned-orders shelf, label on top, so the packer sees at once which order it is. If anything does not add up, an item will not scan, or the label will not open, do not confirm by eye. Set the order aside and tell the team lead.',
+  draw:()=>bg()+shelf(80,180,220,150,2,2,0,{name:'Scanned-orders shelf'})+g(0,0,smallBox(-14,-10,28,20)+label(14,-6,{s:.7}),'mv','--fx:380px;--fy:250px;--tx:120px;--ty:250px;--t:1.6s')+g(0,0,smallBox(-14,-10,28,20)+label(14,-6,{s:.7}),'mv','--fx:380px;--fy:250px;--tx:180px;--ty:250px;--t:1.6s;--d:.8s')+person(430,330,PK)+g(560,160,`<rect x="0" y="0" width="190" height="150" rx="10" fill="#fff" stroke="#e0b0b0"/>${txt(95,26,'Does not add up?',{s:14,w:800,c:C.red})}${txt(95,56,'• Item won\'t scan',{s:12,a:'middle'})}${txt(95,78,'• Label won\'t open',{s:12})}${txt(95,100,'• Wrong quantity',{s:12})}${txt(95,132,'→ Set aside, tell team lead',{s:12,w:800})}`,'pop','--d:2s')+person(700,330,{...LD,cls:'pop bob'})},
+]},
+{id:4,title:'Packing',scenes:[
+ {cap:'Take the order, check it against the label',say:'The packer is the last person to see the order before the customer. Take the next order from the scanned-orders shelf, in sequence, and check the items against the label. This is the second, independent check.',
+  draw:()=>bg()+shelf(60,180,220,150,2,2,i=>i<2?2:1,{name:'Scanned-orders shelf'})+g(0,0,person(0,0,{...PA,walk:true,pose:'carry',item:smallBox(-14,-10,28,20)+label(14,-6,{s:.7})}),'mv','--fx:300px;--fy:330px;--tx:520px;--ty:330px;--t:2.2s')+table(560,250,200)+bubble(520,110,220,60,['Items ✓ Variant ✓','Quantity ✓'],{d:2.3,tail:'bl'})},
+ {cap:'Choose the right box size',say:'Choose the box that fits with a little room for padding. Too big means more damage risk and higher shipping cost. Too small means bulging walls and crushed items. Right size: snug, with room to pad.',
+  draw:()=>bg()+table(100,250,600)+box(130,250,150,100,{open:true,d:.2,cls:'pop',text:'Too big'})+smallBox(190,228,26,20)+cross(205,120,.9,1)+box(340,250,38,30,{open:true,d:.6,cls:'pop',text:'Too small'})+smallBox(345,222,26,20)+cross(359,170,.9,1.3)+box(480,250,70,52,{open:true,d:1,cls:'pop',text:'Just right'})+smallBox(502,220,26,20)+check(515,150,1,1.6)+person(720,330,PA)},
+ {cap:'Pad it, then do the shake test',say:'Wrap items in bubble wrap or pad with kraft paper so nothing moves inside. Cards, slabs and boxes with sharp corners need extra care: corners get damaged first. Then do the shake test. If anything shifts, add padding.',
+  draw:()=>bg()+table(150,250,500)+bubbleSq(300,170,'pop',.2)+bubbleSq(330,170,'pop',.5)+g(430,250,box(0,0,80,60,{open:true})+bubbleSq(40,-30,'',0)+smallBox(28,-40,24,18),'shake','--d:1.6s')+person(250,330,{...PA,pose:'point'})+tag(470,160,'Shake test',{fill:C.packer,d:1.5})+check(560,180,1,3.2)},
+ {cap:'Packing slip inside, tape it tight',say:'Put the packing slip inside the box, on top of the items. It is the customer\'s receipt. Then tape the box shut: along the center seam and the edges, and a cross strip for heavy boxes. No corners should lift.',
+  draw:()=>bg()+table(150,250,500)+box(300,250,100,70,{open:true,slip:true,d:.2,cls:'pop'})+tag(350,140,'Packing slip inside',{fill:C.packer,d:.6})+box(500,250,100,70,{taped:true,d:1.6,cls:'pop'})+tapeRoll(640,232,'pop',1.4)+person(220,330,{...PA,pose:'carry',item:`<rect x="-12" y="-8" width="24" height="16" fill="#fff" stroke="#bbb"/>`})+check(580,150,1,2.2)},
+ {cap:'Label flat on the largest side',say:'Apply the shipping label to the largest flat side of the box. It must lie flat, with no creases, and the barcode must not be covered by tape or wrap around an edge, or it will not scan at the carrier. One order, one label, one box.',
+  draw:()=>bg()+table(150,250,500)+box(200,250,120,80,{taped:true,label:true,labelY:-5,labelS:1.6,d:.2,cls:'pop'})+check(300,140,1,1)+box(430,250,120,80,{taped:true,d:.4,cls:'pop'})+label(550,220,{s:1.6,cls:'',style:'transform:rotate(30deg) scale(1.6)'})+cross(560,150,1,1.4)+txt(490,290,'Over the edge',{s:12,c:C.red})+txt(260,290,'Flat, readable',{s:12,c:C.green})+person(680,330,PA)},
+ {cap:'Into the shipping area, by carrier',say:'Check once more: label readable, box closed, slip inside. Then put the package in the shipping area, in the C B T section or the U S P S section, according to the label. Never mix the two.',
+  draw:()=>bg({zone:[420,350,'Shipping area'],zoneC:'#dfe9f3'})+g(0,0,person(0,0,{...PA,walk:true,pose:'carry',item:smallBox(-14,-10,28,20)}),'mv','--fx:200px;--fy:330px;--tx:420px;--ty:330px;--t:2.2s')+box(460,330,70,52,{taped:true,carrier:'CBT',d:.2,cls:'pop'})+box(460,270,70,52,{taped:true,carrier:'CBT',d:.5,cls:'pop'})+box(650,330,70,52,{taped:true,carrier:'USPS',d:.8,cls:'pop'})+box(650,270,70,52,{taped:true,carrier:'USPS',d:1.1,cls:'pop'})+tag(495,210,'CBT',{fill:'#4a6fa5',d:1.3})+tag(685,210,'USPS',{fill:'#2b5fa3',d:1.5})+line(590,200,590,345)},
+]},
+{id:5,title:'The 30/70 rule',scenes:[
+ {cap:'The shelf between you is a buffer',say:'Picking and packing run at different speeds. The scanned-orders shelf sits between them and works as a buffer. The team\'s job is to keep that buffer in its working range: between thirty and seventy percent full.',
+  draw:()=>bg()+person(130,330,PK)+shelf(290,180,220,150,2,2,1,{name:'Scanned-orders shelf'})+person(670,330,PA)+arrow(175,250,280,250,{d:.5})+arrow(520,250,620,250,{d:.8})+gauge(250,380,300,50,{from:50,t:.1,fd:1})},
+ {cap:'Shelf full: pickers switch to packing',say:'When the shelf is full and there is no room left, pickers stop picking and move to packing. They keep packing until the shelf is at least seventy percent free again.',
+  draw:()=>bg()+shelf(290,180,220,150,2,2,3,{name:'Scanned-orders shelf'})+gauge(250,380,300,25,{from:100,t:3,d:1.2,c:C.red,fd:0})+g(0,0,person(0,0,{...PK,walk:true}),'mv','--fx:130px;--fy:330px;--tx:600px;--ty:330px;--t:2.4s;--d:.6s')+person(690,330,PA)+tag(400,120,'FULL → pickers pack',{fill:C.red,d:.2})},
+ {cap:'Shelf empty: packers help pick',say:'When the shelf is empty and everything is packed, packers go help the pickers. They keep picking until the shelf is at least thirty percent full again.',
+  draw:()=>bg()+shelf(290,180,220,150,2,2,0,{name:'Scanned-orders shelf'})+gauge(250,380,300,35,{from:0,t:3,d:1.2,c:C.packer,fd:0})+g(0,0,person(0,0,{...PA,walk:true}),'mv','--fx:670px;--fy:330px;--tx:200px;--ty:330px;--t:2.4s;--d:.6s')+person(110,330,PK)+tag(400,120,'EMPTY → packers pick',{fill:C.packer,d:.2})},
+ {cap:'Announce the switch, finish what you started',say:'Watching the shelf is everyone\'s job, not only the team lead\'s. Announce a switch out loud or in Slack. Finish the order you started before switching: a half-picked order never stays on the shelf. And whoever switches follows the full steps of the other role, including the checks.',
+  draw:()=>bg()+shelf(290,180,220,150,2,2,2,{name:'Scanned-orders shelf'})+person(140,330,{...PK,pose:'point'})+person(660,330,{...PA,pose:'point'})+bubble(60,110,200,56,['Shelf is full,','I\'m packing now!'],{d:.4,tail:'bl'})+slack(540,100,['moving to packing','until 70% free'],{d:1.2,w:190})+check(400,120,1,2)},
+]},
+{id:6,title:'Shipping',scenes:[
+ {cap:'Two sections, two carriers',say:'As packages are finished they go to the shipping area. C B T packages and U S P S packages go in separate, marked sections. Each carrier takes only its own. Stack them stably, heavy at the bottom, labels facing out.',
+  draw:()=>bg({zone:[80,640,'Shipping area'],zoneC:'#dfe9f3'})+[0,1,2].map(i=>box(120+i*80,330,70,52,{taped:true,carrier:'CBT',d:i*.3,cls:'pop'})).join('')+[0,1].map(i=>box(160+i*80,270,70,52,{taped:true,carrier:'CBT',d:1+i*.3,cls:'pop'})).join('')+[0,1,2].map(i=>box(460+i*80,330,70,52,{taped:true,carrier:'USPS',d:.2+i*.3,cls:'pop'})).join('')+box(500,270,70,52,{taped:true,carrier:'USPS',d:1.4,cls:'pop'})+tag(240,200,'CBT',{fill:'#4a6fa5',d:.5})+tag(580,200,'USPS',{fill:'#2b5fa3',d:.7})+line(400,200,400,445)},
+ {cap:'Watch the clock',say:'The carrier picks up once a day, around early afternoon. In the thirty to sixty minutes before pickup, the priority is finishing what is already scanned, not starting new picks.',
+  draw:()=>bg()+clock(400,160,12,30,{d:.2})+txt(400,230,'Pickup ~ early afternoon',{s:15,w:800,d:1})+tag(240,300,'Finish scanned orders',{fill:C.green,d:1.2})+tag(560,300,'No new picks',{fill:C.red,d:1.5})+person(130,330,PK)+person(670,330,PA)},
+ {cap:'Count before pickup',say:'Before the carrier arrives, count the packages separately for C B T and for U S P S, and write the numbers down.',
+  draw:()=>bg({zone:[80,640,'Shipping area'],zoneC:'#dfe9f3'})+[0,1,2].map(i=>box(120+i*80,330,70,52,{taped:true,carrier:'CBT'})).join('')+[0,1,2].map(i=>box(460+i*80,330,70,52,{taped:true,carrier:'USPS'})).join('')+box(500,270,70,52,{taped:true,carrier:'USPS'})+g(300,120,`<rect x="-80" y="-40" width="160" height="90" rx="8" fill="#fff" stroke="#cfc7b6"/>${txt(0,-12,'CBT: 3',{s:18,d:1,w:600})}${txt(0,22,'USPS: 4',{s:18,d:1,w:600})}`,'pop','--d:1s')+person(700,330,{...PA,pose:'point'})+txt(190,310,'1  2  3',{s:16,c:C.ink,d:1})+txt(540,310,'1  2  3  4',{s:16,c:C.ink,d:1})},
+ {cap:'Hand off and report the count',say:'Hand the packages to the carrier and report the final count to the team lead or in Slack. If the carrier takes fewer than counted, record the difference immediately. Packages packed after pickup stay in the shipping area overnight and go out first the next day.',
+  draw:()=>bg()+g(0,0,truck(0,0,{}),'mv','--fx:820px;--fy:330px;--tx:520px;--ty:330px;--t:2s')+person(420,330,{...PA,pose:'carry',item:smallBox(-14,-10,28,20)})+slack(60,90,['Pickup done','CBT 3 · USPS 4'],{d:2.4})+check(300,220,1,2.8)},
+]},
+{id:7,title:'End of shift',scenes:[
+ {cap:'Clean your station',say:'The shift ends when the warehouse is ready for tomorrow, not when the last box is taped. Unused boxes go back to their spot, stacked by size. Tape, wrap, paper and knives go back where they belong. Offcuts in the bin. Table and scanning area empty.',
+  draw:()=>bg()+table(150,250,500)+g(0,0,box(0,0,50,38,{}),'mv','--fx:300px;--fy:250px;--tx:640px;--ty:250px;--t:1.8s')+g(0,0,tapeRoll(0,0,'',0),'mv','--fx:420px;--fy:232px;--tx:600px;--ty:232px;--t:1.8s;--d:.4s')+g(0,0,bubbleRoll(0,0,'',0),'mv','--fx:360px;--fy:250px;--tx:680px;--ty:250px;--t:1.8s;--d:.8s')+person(100,330,{...PA,pose:'point'})+check(300,150,1,2.4)+txt(300,200,'Table clear',{s:14,w:700,d:1})},
+ {cap:'Check the center shelves again',say:'Walk the center shelves as in the morning. Anything low gets restocked from storage, and the transfer is recorded in the system. Tomorrow\'s picker then starts straight on orders.',
+  draw:()=>bg()+centerShelf(250,200,i=>i===2||i===4?0:2)+storageShelf(600,200)+g(0,0,person(0,0,{...PK,walk:true,pose:'carry',item:smallBox(-12,-8,24,18)}),'mv','--fx:560px;--fy:330px;--tx:380px;--ty:330px;--t:2.2s')+screen(40,150,170,100,['Transfer','Storage → Center','✓ Recorded'],{d:2.3})},
+ {cap:'Check supplies, tell the manager early',say:'Check boxes of every size, tape, bubble wrap, kraft paper and label printer stock. If anything is down to less than two or three days of work, tell the manager now, so it can be reordered in time.',
+  draw:()=>bg()+table(150,250,500)+box(180,250,50,38,{d:.2,cls:'pop'})+box(240,250,70,52,{d:.4,cls:'pop'})+tapeRoll(360,232,'pop',.6)+bubbleRoll(400,250,'pop',.8)+cross(415,170,.9,1.4)+txt(415,140,'Bubble wrap: 1 day left',{s:13,c:C.red,w:800})+slack(470,90,['@manager','bubble wrap low, reorder'],{d:2,w:200})+person(110,330,{...PA,mood:'think'})},
+ {cap:'Ask the team lead what else needs help',say:'Main tasks done? Ask the team lead what else needs help: inventory counts, shelf organization, stream prep, receiving a shipment. We are one team with one goal: every order picked accurately, packed securely and shipped on time.',
+  draw:()=>bg()+person(220,330,PK)+person(330,330,PA)+person(560,330,{...LD,pose:'point'})+bubble(120,120,230,56,['All done. What else','needs a hand?'],{d:.4,tail:'bl'})+bubble(470,110,230,56,['Receiving at 4:30,','come help!'],{d:1.4,tail:'br'})+check(400,220,1,2.4)},
+]},
+];
+function line(x1,y1,x2,y2){return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9fb0c6" stroke-width="3" stroke-dasharray="8 8"/>`;}
+
+/* ============ final test ============ */
+const QUIZ=[
+ {q:'The picker moved 4 boosters from storage to the center shelf. What must happen right after?',o:['Nothing, the move is visible on the shelf','Record the transfer in the system','Tell the packer','Put a sticky note on the storage shelf'],a:1,
+  why:'Every move between locations is recorded in the system immediately. If it is not, the system still shows the item in storage, the next picker cannot find it, and inventory counts drift away from reality.'},
+ {q:'Where are items for orders picked from?',o:['Wherever the item is closest','Storage shelves','The center shelves only','The scanned-orders shelf'],a:2,
+  why:'Orders are picked from the center shelves only. Storage stock is never taken directly; if the center shelf is empty, the item goes through a recorded transfer first.'},
+ {q:'An order has 3 copies of the same item. How do you scan it in Calipoke Station?',o:['Scan one item three times','Scan the label three times','Scan each of the three items once','Scan one item and type the quantity'],a:2,
+  why:'Scan every item one at a time. Scanning each of the three units is how the system confirms you actually hold three, not one.'},
+ {q:'An item\'s barcode will not scan. What do you do?',o:['Confirm the order by eye, the items are clearly right','Skip that item and confirm the rest','Set the order aside and tell the team lead','Pack it without scanning'],a:2,
+  why:'Never confirm an order by eye. Confirming deducts stock, so a discrepancy must be resolved first. Set the order aside, tell the team lead, and keep working on the others.'},
+ {q:'The scanned-orders shelf is completely full. Who switches, and until when?',o:['Packers switch to picking until it is 30% full','Pickers switch to packing until it is at least 70% free','Nobody; the team lead decides','Pickers take a break until it empties'],a:1,
+  why:'The 30/70 rule: when the buffer shelf is full, pickers stop picking and pack until the shelf is at least 70% free. When it is empty, packers help pick until it is at least 30% full.'},
+ {q:'Where does the packing slip go?',o:['Inside the box, on top of the items','Taped to the outside next to the label','Handed to the carrier','Kept at the packing table'],a:0,
+  why:'The packing slip is the customer\'s receipt and goes inside the box, on top of the items. The shipping label with barcode and address goes outside.'},
+ {q:'Which shipping label placement is correct?',o:['Across an edge so it is visible from two sides','Flat on the largest side, barcode not under tape','On the taped seam, so the tape holds it','Anywhere, as long as it sticks'],a:1,
+  why:'The label lies flat on the largest flat side, with no creases, and the barcode must not be covered by tape or wrap around an edge. Otherwise it will not scan at the carrier\'s sorting facility.'},
+ {q:'How are CBT and USPS packages stored in the shipping area?',o:['Together, sorted by size','Together, newest on top','In separate, marked sections','USPS only; CBT goes to the office'],a:2,
+  why:'CBT and USPS packages are kept in separate, marked sections. Each carrier takes only its own packages, and they must be counted separately before pickup.'},
+ {q:'Pickup is in about 45 minutes. What is the priority?',o:['Start as many new picks as possible','Finish packing what is already scanned','Break down the shipping area','Pre-build boxes for tomorrow'],a:1,
+  why:'In the 30-60 minutes before pickup, priority goes to finishing orders that are already scanned so they make today\'s pickup. New picks can wait; a missed pickup delays every order by a day.'},
+ {q:'You notice bubble wrap will run out tomorrow. What do you do?',o:['Use kraft paper from now on and say nothing','Order it yourself online','Tell the manager now so it can be reordered','Mention it next week in the meeting'],a:2,
+  why:'When any supply is down to less than 2-3 days of work, tell the manager right away so it can be reordered in time. Supplies are the manager\'s order; your job is the early warning.'},
+];
+const PASS=8;let qi=0,qans=[];
+/* ---- trainee name + result saving ---- */
+let trainee='';
+function setTrainee(n){trainee=n;try{localStorage.setItem('cph_trainee',n)}catch(e){}
+  document.getElementById('who').innerHTML=`Trainee: <b>${n.replace(/</g,'&lt;')}</b> · <a href="../index.html">All courses</a>`;document.getElementById('askname').hidden=true;}
+function saveResult(score,pass){const el=document.getElementById('saved');const wrong=qans.map((ok,i)=>ok?-1:i).filter(i=>i>=0);
+  if(!trainee){el.textContent='Result not saved: no name entered.';return;}
+  try{trainingDb().ref(TRAINING_PATH).push({name:trainee,course:COURSE_ID,score,total:QUIZ.length,passed:pass,wrong,ts:Date.now(),ua:navigator.userAgent.slice(0,80)})
+    .then(()=>{el.textContent=`Result saved for ${trainee}.`;}).catch(e=>{el.textContent='Could not save the result: '+e.message;});}
+  catch(e){el.textContent='Could not save the result (offline?).';}}
+function openQuiz(){setPlaying(false);L=-1;renderTabs();$('playerbox').hidden=true;$('quizbox').hidden=false;qi=0;qans=[];renderQ();}
+function closeQuiz(l){$('quizbox').hidden=true;$('playerbox').hidden=false;go(l,0);}
+function qprog(){return `<div class="qprog" aria-hidden="true">${QUIZ.map((_,i)=>`<span class="${i<qans.length?(qans[i]?'ok':'no'):i===qi?'cur':''}"></span>`).join('')}</div>`;}
+function renderQ(){const box=$('quiz');
+  if(qi>=QUIZ.length){const n=qans.filter(Boolean).length,pass=n>=PASS;
+    box.innerHTML=`<h2>Final test · result</h2><p class="score ${pass?'pass':'fail'}">${n} / ${QUIZ.length}</p>
+      <p class="q">${pass?`Passed. ${trainee}, you know the process — welcome to the floor!`:`Not passed yet. You need ${PASS} of ${QUIZ.length}.`}</p>
+      ${pass?'':'<p class="note">Wrong answers are marked red above. Review the lessons for those steps, then try again.</p>'}
+      ${qprog()}
+      <div class="qbar"><button class="btn primary" id="qretry">${pass?'Take it again':'Try again'}</button><button class="btn" id="qreview">Review the lessons</button></div><p class="saved" id="saved">Saving your result…</p>`;
+    saveResult(n,pass);
+    $('qretry').onclick=()=>{qi=0;qans=[];renderQ();};$('qreview').onclick=()=>closeQuiz(0);return;}
+  const q=QUIZ[qi];
+  box.innerHTML=`<div class="qbar"><h2>Final test</h2><span class="meta">Question ${qi+1} of ${QUIZ.length} · pass mark ${PASS}/${QUIZ.length}</span></div>${qprog()}
+    <div class="q">${q.q}</div><div class="opts">${q.o.map((o,i)=>`<button class="opt" data-i="${i}"><b>${'ABCD'[i]}</b><span>${o}</span></button>`).join('')}</div><div id="fb"></div><div class="qbar" id="qnext"></div>`;
+  box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(+b.dataset.i));}
+function answer(i){const q=QUIZ[qi],ok=i===q.a;qans.push(ok);
+  document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;const k=+b.dataset.i;if(k===q.a)b.classList.add('right');else if(k===i)b.classList.add('wrong');});
+  $('fb').innerHTML=`<div class="fb ${ok?'ok':'no'}"><b>${ok?'Correct.':`Not quite. The right answer is ${'ABCD'[q.a]}: ${q.o[q.a]}`}</b>${q.why}</div>`;
+  $('qnext').innerHTML=`<button class="btn primary" id="qgo">${qi<QUIZ.length-1?'Next question':'See result'}</button>`;
+  $('qgo').onclick=()=>{qi++;renderQ();};$('qgo').focus();}
+
+/* ============ player ============ */
+const $=id=>document.getElementById(id);
+let L=0,S=0,playing=false,voiceOn=true,timer=null,utter=null;
+const synth=window.speechSynthesis;
+function voices(){try{return synth?synth.getVoices():[]}catch(e){return []}}
+function pickVoice(){const v=voices();return v.find(x=>/en[-_]US/i.test(x.lang)&&/Google|Samantha|Aria|Jenny|Natural/i.test(x.name))||v.find(x=>/en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||v[0];}
+function renderTabs(){$('tabs').innerHTML=LESSONS.map((l,i)=>`<button class="tab ${i===L?'on':''}" role="tab" aria-selected="${i===L}" data-i="${i}"><b>${l.id}</b>${l.title}</button>`).join('')+`<button class="tab ${L===-1?'on':''}" role="tab" data-i="-1"><b>✓</b>Final test</button>`;
+  $('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i<0)openQuiz();else{if(L===-1){$('quizbox').hidden=true;$('playerbox').hidden=false;}go(i,0);}});}
+function renderDots(){const n=LESSONS[L].scenes.length;$('dots').innerHTML=[...Array(n)].map((_,i)=>`<button class="dot ${i===S?'on':i<S?'done':''}" role="tab" aria-selected="${i===S}" aria-label="Scene ${i+1}" data-i="${i}"></button>`).join('');
+  $('dots').querySelectorAll('.dot').forEach(b=>b.onclick=()=>show(+b.dataset.i,true));
+  $('meta').textContent=`Lesson ${LESSONS[L].id} · Scene ${S+1} of ${n}`;}
+function stopSpeech(){clearTimeout(timer);timer=null;try{if(synth)synth.cancel();}catch(e){}}
+function show(i,keep){S=Math.max(0,Math.min(i,LESSONS[L].scenes.length-1));const sc=LESSONS[L].scenes[S];
+  stopSpeech();$('stage').innerHTML=DEFS+sc.draw();$('cap').textContent=sc.cap;$('say').textContent=sc.say;renderDots();
+  if(playing||keep&&playing)narrate(sc);}
+function narrate(sc){const words=sc.say.split(/\s+/).length;const fallback=()=>{timer=setTimeout(advance,Math.max(3500,words*380+1800));};
+  if(voiceOn&&synth){try{utter=new SpeechSynthesisUtterance(sc.say);const v=pickVoice();if(v)utter.voice=v;utter.lang='en-US';utter.rate=.96;utter.pitch=1.05;
+    utter.onend=()=>{if(playing)timer=setTimeout(advance,900);};utter.onerror=fallback;synth.cancel();synth.speak(utter);
+    timer=setTimeout(()=>{if(!synth.speaking&&playing)fallback();},1200);}catch(e){fallback();}}
+  else fallback();}
+function advance(){if(!playing)return;if(S<LESSONS[L].scenes.length-1)show(S+1);else if(L<LESSONS.length-1){go(L+1,0);}else{openQuiz();}}
+function setPlaying(p){playing=p;$('play').textContent=p?'Pause':'Play';if(p)narrate(LESSONS[L].scenes[S]);else stopSpeech();}
+function go(l,s){L=l;S=s;renderTabs();show(S);}
+$('play').onclick=()=>setPlaying(!playing);
+$('prev').onclick=()=>{if(S>0)show(S-1);else if(L>0){go(L-1,LESSONS[L-1].scenes.length-1);}};
+$('next').onclick=()=>{if(S<LESSONS[L].scenes.length-1)show(S+1);else if(L<LESSONS.length-1)go(L+1,0);else openQuiz();};
+$('voice').onclick=()=>{voiceOn=!voiceOn;$('voice').textContent=voiceOn?'Voice on':'Voice off';$('voice').setAttribute('aria-pressed',voiceOn);if(playing){stopSpeech();narrate(LESSONS[L].scenes[S]);}};
+document.addEventListener('keydown',e=>{if(L===-1)return;if(e.target.tagName==='BUTTON'&&e.key===' ')return;if(e.key===' '){e.preventDefault();setPlaying(!playing);}else if(e.key==='ArrowRight')$('next').click();else if(e.key==='ArrowLeft')$('prev').click();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing)setPlaying(false);});
+if(synth&&synth.onvoiceschanged!==undefined)synth.onvoiceschanged=()=>{};
+try{const h=location.hash.replace('#','');const m=/^lesson(\d)$/.exec(h);if(m)L=Math.min(LESSONS.length-1,Math.max(0,+m[1]-1));}catch(e){}
+renderTabs();show(0);
+/* name comes from the start page (?name=), else from this device, else ask */
+(function(){const p=new URLSearchParams(location.search).get('name');let saved='';try{saved=localStorage.getItem('cph_trainee')||''}catch(e){}
+  const n=(p||saved||'').trim();if(n)setTrainee(n);else{document.getElementById('askname').hidden=false;document.getElementById('who').textContent='';}
+  document.getElementById('nameForm').onsubmit=e=>{e.preventDefault();const v=document.getElementById('nameIn').value.trim();if(v)setTrainee(v);};})();
+</script>
+</body>
+</html>

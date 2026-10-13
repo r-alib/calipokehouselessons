@@ -2,151 +2,140 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Calipokehouse Training</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CALIPOKE TRAINING</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/station.css">
 <style>
-:root{--bg:#f3eee4;--panel:#fff;--fg:#2b2a3a;--muted:#6c6a7a;--line:#e2dccd;--accent:#2a9d8f;--accent2:#e76f51;--soft:#e8f3f1;
-  --display:"Fredoka","Nunito",sans-serif;--body:"Nunito","Segoe UI",system-ui,sans-serif}
-@media (prefers-color-scheme:dark){:root{--bg:#1b1a22;--panel:#26252f;--fg:#f0ede6;--muted:#a9a6b5;--line:#3a3845;--soft:#1f3734;color-scheme:dark}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);padding:24px 16px 48px}
-.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
-h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,4vw,34px);margin:0}
-h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0}
-p{margin:0;line-height:1.5}.muted{color:var(--muted);font-size:14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-input[type=text]{flex:1;min-width:200px;font:600 17px var(--body);padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg)}
-input:focus,.btn:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
-.btn{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:12px;padding:11px 16px;font:700 15px var(--body);cursor:pointer}
-.btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
-.btn.ghost{background:transparent}
 .courses{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-.course{display:flex;flex-direction:column;gap:10px}
-.course .meta{display:flex;gap:12px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
-.course .status{font-size:13px;font-weight:700}
-.status.pass{color:#3ba55c}.status.fail{color:#d64545}
-table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
-.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;color:#fff}
-.pill.pass{background:#3ba55c}.pill.fail{background:#d64545}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.tile{background:var(--soft);border-radius:12px;padding:12px 14px}
-.tile b{font-family:var(--display);font-size:26px;font-weight:600;display:block}
-.tile span{font-size:12px;color:var(--muted)}
+.course{display:flex;flex-direction:column;gap:12px}
+.course .pname{font-family:var(--disp);font-weight:600;font-size:18px;color:var(--ink)}
+.course .meta{display:flex;gap:14px;font-size:12.5px;color:var(--muted)}
+.course .meta b{color:var(--ink);font-family:var(--mono)}
+.course .status{font-size:12.5px;font-weight:600;color:var(--muted);min-height:18px}
+.status.pass{color:var(--ok)}.status.fail{color:var(--warn)}
+.course.done{border-color:var(--accent)}
+.course.done::after{content:"PASSED";position:absolute;top:11px;right:11px;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:16px}
 .scroll{overflow-x:auto}
-details summary{cursor:pointer;color:var(--muted);font-size:13px}
-.wrongs{font-size:12px;color:var(--muted)}
-[hidden]{display:none!important}
+.wrongs{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.login{max-width:520px;margin:40px auto 0}
+select.btn{appearance:none;padding-right:30px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Calipokehouse Training</h1>
-    <p class="muted">Short cartoon courses for the warehouse team, each with a final test.</p>
-  </header>
+<header>
+  <div class="brand"><span class="dot"></span><div>CALIPOKE TRAINING<small id="meName">Sign in</small></div></div>
+  <div class="spacer"></div>
+  <div class="pill" id="coursePill">📚 <b id="courseCount">0</b> courses</div>
+  <button class="btn ghost" id="switch" hidden>Change name</button>
+</header>
 
+<main>
   <!-- Step 1: name -->
-  <section class="card" id="login">
-    <h2>Who is training today?</h2>
-    <p class="muted" style="margin:6px 0 14px">Enter your name as the team knows it. Your test results are saved under this name.</p>
+  <section class="card login" id="login">
+    <div class="eyebrow">Trainee</div>
+    <h1>Who is training today?</h1>
+    <p class="sub" style="margin-bottom:16px">Enter your name as the team knows it. Test results are saved under this name.</p>
     <form class="row" id="nameForm">
-      <input type="text" id="name" placeholder="Your name" autocomplete="name" maxlength="40" required>
-      <button class="btn primary" type="submit">Continue</button>
+      <input type="text" class="tinput" id="name" placeholder="Your name" autocomplete="name" maxlength="40" required>
+      <button class="btn primary lg" type="submit">Continue</button>
     </form>
   </section>
 
   <!-- Step 2: courses -->
   <section id="home" hidden>
-    <div class="row" style="justify-content:space-between">
-      <h2 id="hello"></h2>
-      <button class="btn ghost" id="switch">Not you? Change name</button>
-    </div>
-    <div class="courses" id="courses" style="margin-top:12px"></div>
-    <p class="muted" style="margin-top:12px">A course opens in a new tab. Finish the final test there; your result shows here when you come back.</p>
+    <div class="eyebrow">Courses</div>
+    <h1 id="hello"></h1>
+    <p class="sub" style="margin-bottom:18px">A course opens in a new tab. Finish the final test there; your result shows here when you come back.</p>
+    <div class="courses" id="courses"></div>
   </section>
 
   <!-- Admin -->
   <section id="admin" hidden style="display:flex;flex-direction:column;gap:14px">
     <div class="card">
       <div class="row" style="justify-content:space-between">
-        <h2>Test results</h2>
+        <div><div class="eyebrow">Admin</div><h1 style="margin:0">Test results</h1></div>
         <div class="row">
           <select id="courseFilter" class="btn"></select>
-          <button class="btn" id="refresh">Refresh</button>
-          <button class="btn" id="exportCsv">Export CSV</button>
+          <button class="btn" id="refresh">↻ Refresh</button>
+          <button class="btn" id="exportCsv">⬇ CSV</button>
+          <button class="btn ghost" id="adminOut">⎋ Sign out</button>
         </div>
       </div>
-      <div class="tiles" id="tiles" style="margin-top:14px"></div>
+      <div class="tiles" id="tiles"></div>
     </div>
     <div class="card">
-      <h2 style="margin-bottom:10px">Latest result per person</h2>
+      <h2>Latest result per person</h2>
       <div class="scroll"><table id="people"><thead><tr><th>Name</th><th>Course</th><th>Best</th><th>Latest</th><th>Attempts</th><th>Last attempt</th></tr></thead><tbody></tbody></table></div>
     </div>
     <div class="card">
-      <h2 style="margin-bottom:10px">All attempts</h2>
-      <div class="scroll"><table id="attempts"><thead><tr><th>Date</th><th>Name</th><th>Course</th><th>Score</th><th>Result</th><th>Missed questions</th></tr></thead><tbody></tbody></table></div>
-      <p class="muted" id="count" style="margin-top:10px"></p>
+      <h2>All attempts</h2>
+      <div class="scroll"><table id="attempts"><thead><tr><th>Date</th><th>Name</th><th>Course</th><th>Score</th><th>Result</th><th>Missed</th></tr></thead><tbody></tbody></table></div>
+      <p class="sub" id="count" style="margin-top:10px;font-size:13px"></p>
     </div>
   </section>
-</div>
+</main>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-database-compat.js"></script>
 <script src="shared/firebase-config.js"></script>
 <script src="shared/courses.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const ADMIN_NAME='admin';
 let who='';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function fmt(ts){return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
 function courseTitle(id){const c=COURSES.find(c=>c.id===id);return c?c.title:id;}
+$('courseCount').textContent=COURSES.length;
 
 /* ---- login ---- */
 $('nameForm').onsubmit=e=>{e.preventDefault();const n=$('name').value.trim();if(!n)return;enter(n);};
-$('switch').onclick=()=>{try{localStorage.removeItem('cph_trainee')}catch(e){}location.hash='';show('login');$('name').value='';$('name').focus();};
+function signOut(){who='';try{localStorage.removeItem('cph_trainee')}catch(e){}show('login');$('name').value='';$('name').focus();$('meName').textContent='Sign in';$('switch').hidden=true;}
+$('switch').onclick=signOut;$('adminOut').onclick=signOut;
 function show(id){['login','home','admin'].forEach(s=>$(s).hidden=s!==id);}
 function enter(n){who=n;try{localStorage.setItem('cph_trainee',n)}catch(e){}
-  if(n.toLowerCase()===ADMIN_NAME){show('admin');loadAdmin();}else{$('hello').textContent=`Hi, ${n}!`;show('home');renderCourses();}}
+  $('meName').textContent=n;$('switch').hidden=false;
+  if(n.toLowerCase()===ADMIN_NAME){show('admin');loadAdmin();}else{$('hello').textContent=`Hi, ${n}`;show('home');renderCourses();}}
 
 /* ---- courses for a trainee ---- */
 function renderCourses(){
-  const box=$('courses');box.innerHTML=COURSES.map(c=>`<article class="card course" data-id="${c.id}">
-    <h2>${c.title}</h2><p class="muted">${c.desc}</p>
-    <div class="meta"><span>${c.lessons} lessons</span><span>~${c.minutes} min</span><span>test ${c.test.pass}/${c.test.questions} to pass</span></div>
+  const box=$('courses');box.innerHTML=COURSES.map(c=>`<article class="card course" data-id="${c.id}" style="position:relative">
+    <div class="pname">${esc(c.title)}</div><p class="sub" style="font-size:13.5px">${esc(c.desc)}</p>
+    <div class="meta"><span><b>${c.lessons}</b> lessons</span><span><b>~${c.minutes}</b> min</span><span>test <b>${c.test.pass}/${c.test.questions}</b></span></div>
     <div class="status" data-status="${c.id}">Checking your result…</div>
-    <div class="row"><a class="btn primary" href="${c.file}?name=${encodeURIComponent(who)}" target="_blank" rel="opener">Open course</a></div>
+    <div class="row"><a class="btn primary" href="${c.file}?name=${encodeURIComponent(who)}" target="_blank" rel="opener">▶ Open course</a></div>
   </article>`).join('');
   trainingDb().ref(TRAINING_PATH).orderByChild('name').equalTo(who).once('value').then(s=>{
     const rows=[];s.forEach(ch=>{rows.push(ch.val())});
     COURSES.forEach(c=>{const mine=rows.filter(r=>r.course===c.id).sort((a,b)=>b.ts-a.ts);const el=document.querySelector(`[data-status="${c.id}"]`);
       if(!mine.length){el.textContent='Not taken yet';el.className='status';return;}
       const best=Math.max(...mine.map(r=>r.score));const passed=mine.some(r=>r.passed);
-      el.className='status '+(passed?'pass':'fail');
+      el.className='status '+(passed?'pass':'fail');if(passed)el.closest('.course').classList.add('done');
       el.textContent=passed?`Passed · best ${best}/${mine[0].total} · ${mine.length} attempt${mine.length>1?'s':''}`:`Not passed yet · latest ${mine[0].score}/${mine[0].total} · ${mine.length} attempt${mine.length>1?'s':''}`;});
   }).catch(()=>{document.querySelectorAll('.status').forEach(el=>el.textContent='')});
 }
-// refresh statuses when the trainee comes back from a course tab
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&who&&!$('home').hidden)renderCourses();});
 
 /* ---- admin ---- */
 let allRows=[];
 function loadAdmin(){
-  $('courseFilter').innerHTML=`<option value="">All courses</option>`+COURSES.map(c=>`<option value="${c.id}">${c.title}</option>`).join('');
+  $('courseFilter').innerHTML=`<option value="">All courses</option>`+COURSES.map(c=>`<option value="${c.id}">${esc(c.title)}</option>`).join('');
   trainingDb().ref(TRAINING_PATH).once('value').then(s=>{allRows=[];s.forEach(ch=>{allRows.push({key:ch.key,...ch.val()})});allRows.sort((a,b)=>b.ts-a.ts);renderAdmin();})
-  .catch(e=>{$('tiles').innerHTML=`<p class="muted">Could not load results: ${e.message}</p>`;});
+  .catch(e=>{$('tiles').innerHTML=`<p class="sub">Could not load results: ${esc(e.message)}</p>`;});
 }
 function renderAdmin(){
   const f=$('courseFilter').value;const rows=f?allRows.filter(r=>r.course===f):allRows;
-  const people={};rows.forEach(r=>{const k=r.name.toLowerCase()+'|'+r.course;(people[k]=people[k]||{name:r.name,course:r.course,rows:[]}).rows.push(r);});
+  const people={};rows.forEach(r=>{const k=String(r.name).toLowerCase()+'|'+r.course;(people[k]=people[k]||{name:r.name,course:r.course,rows:[]}).rows.push(r);});
   const P=Object.values(people);const passedPeople=P.filter(p=>p.rows.some(r=>r.passed)).length;
   const avg=rows.length?Math.round(rows.reduce((a,r)=>a+r.score/r.total*100,0)/rows.length):0;
-  $('tiles').innerHTML=`<div class="tile"><b>${P.length}</b><span>people</span></div><div class="tile"><b>${passedPeople}</b><span>passed</span></div><div class="tile"><b>${P.length-passedPeople}</b><span>not passed yet</span></div><div class="tile"><b>${rows.length}</b><span>attempts</span></div><div class="tile"><b>${avg}%</b><span>average score</span></div>`;
+  const kv=(n,l,c)=>`<div class="kv"><div class="n" ${c?`style="color:var(--${c})"`:''}>${n}</div><div class="l">${l}</div></div>`;
+  $('tiles').innerHTML=kv(P.length,'people')+kv(passedPeople,'passed','ok')+kv(P.length-passedPeople,'not passed yet',P.length-passedPeople?'warn':'')+kv(rows.length,'attempts')+kv(avg+'%','average score');
   $('people').querySelector('tbody').innerHTML=P.sort((a,b)=>b.rows[0].ts-a.rows[0].ts).map(p=>{const best=Math.max(...p.rows.map(r=>r.score)),l=p.rows[0];
-    return `<tr><td><b>${p.name}</b></td><td>${courseTitle(p.course)}</td><td>${best}/${l.total}</td><td><span class="pill ${l.passed?'pass':'fail'}">${l.score}/${l.total}</span></td><td>${p.rows.length}</td><td>${fmt(l.ts)}</td></tr>`;}).join('')||`<tr><td colspan="6" class="muted">No results yet</td></tr>`;
-  $('attempts').querySelector('tbody').innerHTML=rows.map(r=>`<tr><td>${fmt(r.ts)}</td><td>${r.name}</td><td>${courseTitle(r.course)}</td><td>${r.score}/${r.total}</td><td><span class="pill ${r.passed?'pass':'fail'}">${r.passed?'PASS':'FAIL'}</span></td><td class="wrongs">${(r.wrong||[]).map(w=>'Q'+(w+1)).join(', ')||'—'}</td></tr>`).join('')||`<tr><td colspan="6" class="muted">No results yet</td></tr>`;
+    return `<tr><td><b>${esc(p.name)}</b></td><td>${esc(courseTitle(p.course))}</td><td class="mono">${best}/${l.total}</td><td><span class="tag ${l.passed?'ok':'err'}">${l.score}/${l.total}</span></td><td class="mono">${p.rows.length}</td><td>${fmt(l.ts)}</td></tr>`;}).join('')||`<tr><td colspan="6" class="sub">No results yet</td></tr>`;
+  $('attempts').querySelector('tbody').innerHTML=rows.map(r=>`<tr><td>${fmt(r.ts)}</td><td>${esc(r.name)}</td><td>${esc(courseTitle(r.course))}</td><td class="mono">${r.score}/${r.total}</td><td><span class="tag ${r.passed?'ok':'err'}">${r.passed?'PASS':'FAIL'}</span></td><td class="wrongs">${(r.wrong||[]).map(w=>'Q'+(w+1)).join(' ')||'—'}</td></tr>`).join('')||`<tr><td colspan="6" class="sub">No results yet</td></tr>`;
   $('count').textContent=`${rows.length} attempt${rows.length===1?'':'s'} shown`;
 }
 $('courseFilter').onchange=renderAdmin;$('refresh').onclick=loadAdmin;
@@ -154,7 +143,6 @@ $('exportCsv').onclick=()=>{const f=$('courseFilter').value;const rows=f?allRows
   const csv=[['date','name','course','score','total','passed','missed_questions'],...rows.map(r=>[new Date(r.ts).toISOString(),r.name,r.course,r.score,r.total,r.passed?'yes':'no',(r.wrong||[]).map(w=>w+1).join(' ')])].map(l=>l.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`training-results-${new Date().toISOString().slice(0,10)}.csv`;a.click();};
 
-/* ---- boot: remember the name on this device ---- */
 try{const saved=localStorage.getItem('cph_trainee');if(saved){$('name').value=saved;enter(saved);}}catch(e){}
 </script>
 </body>

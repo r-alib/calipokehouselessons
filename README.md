@@ -1,6 +1,6 @@
 # Calipokehouse Training
 
-Short cartoon courses for the warehouse team, each ending in a test. Static site, no build step: plain HTML + Firebase Realtime Database for test results.
+Short cartoon courses for the warehouse team, each ending in a test. Styled to match CALIPOKE STATION (shared/station.css). Static site, no build step: plain HTML + Firebase Realtime Database for test results.
 
 ## Structure
 
@@ -8,6 +8,7 @@ Short cartoon courses for the warehouse team, each ending in a test. Static site
 index.html                              start page: name → course list; "Admin" → results panel
 courses/warehouse-picking-packing.html  course 1 (7 lessons, 35 scenes, 10-question test)
 shared/courses.js                       course catalog shown on the start page
+shared/station.css                      shared look (same tokens as CALIPOKE STATION)
 shared/firebase-config.js               Firebase config (same project as CALIPOKE STATION)
 ```
 

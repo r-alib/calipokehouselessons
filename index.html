@@ -29,20 +29,12 @@ select.btn{appearance:none;padding-right:30px;background-image:linear-gradient(4
   <div class="brand"><span class="dot"></span><div>CALIPOKE TRAINING<small id="meName">Sign in</small></div></div>
   <div class="spacer"></div>
   <div class="pill" id="coursePill">📚 <b id="courseCount">0</b> courses</div>
-  <button class="btn ghost" id="switch" hidden>Change name</button>
+  <button class="btn ghost" id="viewToggle" hidden>📚 My courses</button>
+  <div id="hdrUser"></div>
 </header>
 
 <main>
-  <!-- Step 1: name -->
-  <section class="card login" id="login">
-    <div class="eyebrow">Trainee</div>
-    <h1>Who is training today?</h1>
-    <p class="sub" style="margin-bottom:16px">Enter your name as the team knows it. Test results are saved under this name.</p>
-    <form class="row" id="nameForm">
-      <input type="text" class="tinput" id="name" placeholder="Your name" autocomplete="name" maxlength="40" required>
-      <button class="btn primary lg" type="submit">Continue</button>
-    </form>
-  </section>
+  <section class="card login" id="login"><p class="sub">Signing in…</p></section>
 
   <!-- Step 2: courses -->
   <section id="home" hidden>
@@ -61,7 +53,6 @@ select.btn{appearance:none;padding-right:30px;background-image:linear-gradient(4
           <select id="courseFilter" class="btn"></select>
           <button class="btn" id="refresh">↻ Refresh</button>
           <button class="btn" id="exportCsv">⬇ CSV</button>
-          <button class="btn ghost" id="adminOut">⎋ Sign out</button>
         </div>
       </div>
       <div class="tiles" id="tiles"></div>
@@ -80,25 +71,26 @@ select.btn{appearance:none;padding-right:30px;background-image:linear-gradient(4
 
 <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+<script src="https://r-alib.github.io/calipoke-admin/calipoke-auth.js"></script>
 <script src="shared/firebase-config.js"></script>
 <script src="shared/courses.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-const ADMIN_NAME='admin';
+/* sign-in and roles come from CALIPOKE ADMIN (calipoke-auth.js); results are still saved under the employee's name */
 let who='';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function fmt(ts){return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
 function courseTitle(id){const c=COURSES.find(c=>c.id===id);return c?c.title:id;}
 $('courseCount').textContent=COURSES.length;
 
-/* ---- login ---- */
-$('nameForm').onsubmit=e=>{e.preventDefault();const n=$('name').value.trim();if(!n)return;enter(n);};
-function signOut(){who='';try{localStorage.removeItem('cph_trainee')}catch(e){}show('login');$('name').value='';$('name').focus();$('meName').textContent='Sign in';$('switch').hidden=true;}
-$('switch').onclick=signOut;$('adminOut').onclick=signOut;
+/* ---- sign-in ---- */
 function show(id){['login','home','admin'].forEach(s=>$(s).hidden=s!==id);}
-function enter(n){who=n;try{localStorage.setItem('cph_trainee',n)}catch(e){}
-  $('meName').textContent=n;$('switch').hidden=false;
-  if(n.toLowerCase()===ADMIN_NAME){show('admin');loadAdmin();}else{$('hello').textContent=`Hi, ${n}`;show('home');renderCourses();}}
+let IS_ADMIN=false;
+function enter(u){who=u.name; IS_ADMIN=u.role==='admin';
+  $('meName').textContent=u.name+' · '+u.roleLabel; $('hello').textContent=`Hi, ${u.name}`;
+  if(IS_ADMIN){ $('viewToggle').hidden=false; show('admin'); loadAdmin(); } else { show('home'); renderCourses(); }}
+$('viewToggle').onclick=()=>{ if($('admin').hidden){ show('admin'); loadAdmin(); $('viewToggle').textContent='📚 My courses'; } else { show('home'); renderCourses(); $('viewToggle').textContent='📊 Test results'; } };
 
 /* ---- courses for a trainee ---- */
 function renderCourses(){
@@ -143,7 +135,9 @@ $('exportCsv').onclick=()=>{const f=$('courseFilter').value;const rows=f?allRows
   const csv=[['date','name','course','score','total','passed','missed_questions'],...rows.map(r=>[new Date(r.ts).toISOString(),r.name,r.course,r.score,r.total,r.passed?'yes':'no',(r.wrong||[]).map(w=>w+1).join(' ')])].map(l=>l.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`training-results-${new Date().toISOString().slice(0,10)}.csv`;a.click();};
 
-try{const saved=localStorage.getItem('cph_trainee');if(saved){$('name').value=saved;enter(saved);}}catch(e){}
+/* the training database app is created first, so the sign-in library reuses it (same project) */
+try{ trainingDb(); }catch(e){}
+CPAuth.init({app:'lessons',header:'#hdrUser',onReady:enter});
 </script>
 </body>
 </html>

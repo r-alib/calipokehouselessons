@@ -127,6 +127,7 @@ main{max-width:980px}
 
 <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
 <script src="../shared/firebase-config.js"></script>
 <script>
 const COURSE_ID='warehouse-picking-packing';
@@ -348,8 +349,11 @@ function setTrainee(n){trainee=n;try{localStorage.setItem('cph_trainee',n)}catch
   document.getElementById('whoName').textContent=n;document.getElementById('askname').hidden=true;}
 function saveResult(score,pass){const el=document.getElementById('saved');const wrong=qans.map((ok,i)=>ok?-1:i).filter(i=>i>=0);
   if(!trainee){el.textContent='Result not saved: no name entered.';return;}
-  try{trainingDb().ref(TRAINING_PATH).push({name:trainee,course:COURSE_ID,score,total:QUIZ.length,passed:pass,wrong,ts:Date.now(),ua:navigator.userAgent.slice(0,80)})
-    .then(()=>{el.textContent=`Result saved for ${trainee}.`;}).catch(e=>{el.textContent='Could not save the result: '+e.message;});}
+  /* the database needs the sign-in of the Training page (same browser) — wait until it is restored */
+  try{trainingDb(); const au=firebase.auth(); const off=au.onAuthStateChanged(u=>{ off();
+    if(!u){ el.textContent='Result not saved: sign in on the CALIPOKE TRAINING page first, then take the test again.'; return; }
+    trainingDb().ref(TRAINING_PATH).push({name:trainee,course:COURSE_ID,score,total:QUIZ.length,passed:pass,wrong,ts:Date.now(),ua:navigator.userAgent.slice(0,80)})
+    .then(()=>{el.textContent=`Result saved for ${trainee}.`;}).catch(e=>{el.textContent='Could not save the result: '+e.message;}); });}
   catch(e){el.textContent='Could not save the result (offline?).';}}
 function openQuiz(){setPlaying(false);L=-1;renderTabs();$('playerbox').hidden=true;$('quizbox').hidden=false;qi=0;qans=[];renderQ();}
 function closeQuiz(l){$('quizbox').hidden=true;$('playerbox').hidden=false;go(l,0);}
